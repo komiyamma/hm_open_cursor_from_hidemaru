@@ -2,4 +2,4 @@
 
 setcompatiblemode 0x08000000;
 
-execmacro currentmacrodirectory + "\\HmOpenKiroFromHidemaru.mac", "scm";
+execmacro currentmacrodirectory + "\\HmOpenCursorFromHidemaru.mac", "scm";

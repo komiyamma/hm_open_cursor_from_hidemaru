@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenKiroFromHidemaru v 1.2.1.4
+ * HmOpenCursorFromHidemaru v 1.2.1.4
  * Copyright (C) 2021-2025 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -11,8 +11,8 @@ setcompatiblemode 0x08000000;
 jsmode "JScript\\" + currentmacrofilename;
 js {
 
-// Kiroの絶対パスの設定。kiro.exe (もしくはkiro.cmd)の場所を設定する。設定していない場合は一応自動で探す。例：@"C:\usr\kiro\kiro.exe"
-var kiroAbsolutePath = @"";
+// Cursorの絶対パスの設定。cursor.exe (もしくはcursor.cmd)の場所を設定する。設定していない場合は一応自動で探す。例：@"C:\usr\cursor\cursor.exe"
+var cursorAbsolutePath = @"";
 
 
 
@@ -27,64 +27,64 @@ var currentMacroDirectory = currentmacrodirectory();
 // 非同期なのでファイルパスが変更になってしまう可能性が僅かにあるため、控えておく
 var currentFileFullPath = hidemaru.getFileFullPath();
 
-// Kiroのパスを探す
-function getKiroAbsolutePath() {
-    if (!kiroAbsolutePath) {
+// Cursorのパスを探す
+function getCursorAbsolutePath() {
+    if (!cursorAbsolutePath) {
         try {
-            var success = openreg("CLASSESROOT", "Applications\\Kiro.exe\\shell\\open");
+            var success = openreg("CLASSESROOT", "Applications\\Cursor.exe\\shell\\open");
             if (success) {
-                kiroAbsolutePath = getregstr("Icon");
-                kiroAbsolutePath = kiroAbsolutePath.replace(/"/g, '');
+                cursorAbsolutePath = getregstr("Icon");
+                cursorAbsolutePath = cursorAbsolutePath.replace(/"/g, '');
             }
         } finally {
             closereg();
         }
     }
-    if (!kiroAbsolutePath) {
+    if (!cursorAbsolutePath) {
         try {
-            var success = openreg("CURRENTUSER", "SOFTWARE\\Classes\\Applications\\Kiro.exe\\shell\\open");
+            var success = openreg("CURRENTUSER", "SOFTWARE\\Classes\\Applications\\Cursor.exe\\shell\\open");
             if (success) {
-                kiroAbsolutePath = getregstr("Icon");
-                kiroAbsolutePath = kiroAbsolutePath.replace(/"/g, '');
+                cursorAbsolutePath = getregstr("Icon");
+                cursorAbsolutePath = cursorAbsolutePath.replace(/"/g, '');
             }
         } finally {
             closereg();
         }
     }
-    if (!kiroAbsolutePath) {
+    if (!cursorAbsolutePath) {
         // Whereで見つかるようならzipか何かで展開しただけのものを、手動でパスを通しているのだろう。
-        runex("where kiro.cmd", 1, 0, "", 0, "", 0, "", 0, "", 2, 0, 0, 0);
+        runex("where cursor.cmd", 1, 0, "", 0, "", 0, "", 0, "", 2, 0, 0, 0);
         // 発見したようだ。
         if (getresultex(9) == 0) {
-            kiroAbsolutePath = "kiro.cmd";
+            cursorAbsolutePath = "cursor.cmd";
         }
     }
-    if (!kiroAbsolutePath) {
+    if (!cursorAbsolutePath) {
         // Whereで見つかるようならzipか何かで展開しただけのものを、手動でパスを通しているのだろう。
-        runex("where kiro.exe", 1, 0, "", 0, "", 0, "", 0, "", 2, 0, 0, 0);
+        runex("where cursor.exe", 1, 0, "", 0, "", 0, "", 0, "", 2, 0, 0, 0);
         // 発見したようだ。
         if (getresultex(9) == 0) {
-            kiroAbsolutePath = "kiro.exe";
+            cursorAbsolutePath = "cursor.exe";
         }
     }
 
-    return kiroAbsolutePath;
+    return cursorAbsolutePath;
 }
 
 
-var gitRootDir = ""; // ちょっと格好悪いが、syncOpenKiroは同期で伝えるので、gitRootDirはグローバルにしておく。
+var gitRootDir = ""; // ちょっと格好悪いが、syncOpenCursorは同期で伝えるので、gitRootDirはグローバルにしておく。
 var gitProcess = null;
 
 findGitDir();
 
 function findGitDir() {
     try {
-        // Kiroは、PCにちゃんと入っとるんか？
-        kiroAbsolutePath = getKiroAbsolutePath();
+        // Cursorは、PCにちゃんと入っとるんか？
+        cursorAbsolutePath = getCursorAbsolutePath();
 
-        // kiroのパス自体が見つかってないか、パスは見つかったがそこにファイルが存在しない
-        if (!kiroAbsolutePath || !fso.FileExists(kiroAbsolutePath)) {
-            throw "Kiroが発見できませんでした。\nマクロ「HmOpenKiroFromHidemaru.mac」を編集し、変数「KiroAbsoluePath」にKiroのパスを設定してください。";
+        // cursorのパス自体が見つかってないか、パスは見つかったがそこにファイルが存在しない
+        if (!cursorAbsolutePath || !fso.FileExists(cursorAbsolutePath)) {
+            throw "Cursorが発見できませんでした。\nマクロ「HmOpenCursorFromHidemaru.mac」を編集し、変数「CursorAbsoluePath」にCursorのパスを設定してください。";
         }
 
         if (currentFileFullPath) {
@@ -104,9 +104,9 @@ function findGitDir() {
                 gitProcess.onClose(onCloseGitProcess);
             }
 
-        // ファイル開いてないなら、そのままKiroを(ファイルを開かずに)起動。
+        // ファイル開いてないなら、そのままCursorを(ファイルを開かずに)起動。
         } else {
-            openKiroNoArgs();
+            openCursorNoArgs();
         }
 
     } catch (e) {
@@ -130,11 +130,11 @@ function readStdOutAsync(outputText) {
     } else {
         gitRootDir = ""; // 得体のしれないもの。不採用
     }
-    syncOpenKiro();
+    syncOpenCursor();
 }
 
 function readStdErrAsync(outputText) {
-    syncOpenKiro();
+    syncOpenCursor();
 }
 
 
@@ -150,9 +150,9 @@ if (typeof(openTimeHandler) == "undefined") {
 }
 
 // 非同期だと使えない関数等があるので同期で。非同期から同期にするための関数
-function syncOpenKiro() {
+function syncOpenCursor() {
 
-    var command = "js {openKiro()}";
+    var command = "js {openCursor()}";
 
     // 予約という形にすることで、postExecMacroMemoryでのスケジュールが被ったとしても、リトライできるように。
     var isScheduled = 0;
@@ -167,26 +167,26 @@ function syncOpenKiro() {
     openTimeHandler = hidemaru.setTimeout(attemptExecution, 0); // まずは0ディレイで実行を試みる
 }
 
-// 何も引数なしでKiroを実行するだけ
-function openKiroNoArgs() {
+// 何も引数なしでCursorを実行するだけ
+function openCursorNoArgs() {
     // 対象のファイルなし
-    var command = sprintf('"%s"', kiroAbsolutePath);
-    openKiroCommand(command);
+    var command = sprintf('"%s"', cursorAbsolutePath);
+    openCursorCommand(command);
 }
 
 // テンポラリフォルダに次の時だけソースリポジトリへと移動することを許可するために
 function makeTempFile() {
     var tempfolder = getenv("temp") || getenv("tmp");
     if (tempfolder) {
-        var tempFileFullPath = sprintf('%s\\HmOpenKiroFromHidemaru.txt', tempfolder);
+        var tempFileFullPath = sprintf('%s\\HmOpenCursorFromHidemaru.txt', tempfolder);
         hidemaru.saveTextFile(tempFileFullPath, "1", "utf8");
     }
 }
 
-// 同期関数。Kiroを指定のファイル、指定のディレクトリ(ワークスペース想定)、指定のポジションで開く
-function openKiro() {
+// 同期関数。Cursorを指定のファイル、指定のディレクトリ(ワークスペース想定)、指定のポジションで開く
+function openCursor() {
 
-    if (!kiroAbsolutePath) { return; }
+    if (!cursorAbsolutePath) { return; }
 
     // ファイルなし
     if (!currentFileFullPath) { return; }
@@ -202,12 +202,12 @@ function openKiro() {
         if (openMode == "scm") { openMode = ""; }
     }
 
-    // 謎だが最後が「\」で終わっている場合、１つ「\」を付け加える必要がある。Kiroの解釈の問題だろう
+    // 謎だが最後が「\」で終わっている場合、１つ「\」を付け加える必要がある。Cursorの解釈の問題だろう
     if (workSpaceDir[workSpaceDir.length-1] == "\\") {
         workSpaceDir = workSpaceDir + "\\";
     }
 
-    // Kiroで開くカーソルポジションの取得
+    // Cursorで開くカーソルポジションの取得
     var cursorPos = calcCenterPosition();
 
 
@@ -218,18 +218,18 @@ function openKiro() {
 
         // ソースビューへと自動で移行。対象のリポジトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
         var command = sprintf('"%s" -n -g "%s" "%s:%d:%d" --extensionDevelopmentPath="%s"',
-                              kiroAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\kiro_extension");
+                              cursorAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\cursor_extension");
     } else {
 
         // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
         var command = sprintf('"%s" -n -g "%s" "%s:%d:%d"',
-                              kiroAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1);
+                              cursorAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1);
     }
 
-    openKiroCommand(command);
+    openCursorCommand(command);
 }
 
-function openKiroCommand(command) {
+function openCursorCommand(command) {
     runex(command
         , 0     //sync   0:async, 1:sync
         , 0, "" //stdin  0:none, 1:auto, 2:<file, 3:(reserved), 4:current content, 5:selection
@@ -244,8 +244,8 @@ function openKiroCommand(command) {
 }
 
 
-// 秀丸上のカーソルが画面内ならば、そこと同じ場所をKiroでもカーソルの位置とする
-// カーソルが画面外ならば、今秀丸で見えてる場所あたりをKiroで開く
+// 秀丸上のカーソルが画面内ならば、そこと同じ場所をCursorでもカーソルの位置とする
+// カーソルが画面外ならば、今秀丸で見えてる場所あたりをCursorで開く
 function calcCenterPosition() {
     // 秀丸内で映っている画面の最初の行は、lineno換算（エディタ的）では何行目？
     var screenTopLineNo = ytolineno(0, screentopy());
@@ -255,7 +255,7 @@ function calcCenterPosition() {
     // カーソルが画面からはみ出ているか？ （正確な判定をするにはあまりに迂遠なので、簡易判定）
     if (linenoWCS < screenTopLineNo || screenTopLineNo + windowheight() < linenoWCS) {
         // 画面外のカーソルの位置に移動するのは今ひとつなので、今秀丸で見てる場所に近しい画面になるように、当たりをつける。
-        // 「13」は完全にマニュアルなマジックナンバーであるが、概ね今秀丸で見ているトップの行の「13行くらい下の行」を開くように Kiro に伝えると、そこを画面中央に配置しようとするのでいい感じになる。
+        // 「13」は完全にマニュアルなマジックナンバーであるが、概ね今秀丸で見ているトップの行の「13行くらい下の行」を開くように Cursor に伝えると、そこを画面中央に配置しようとするのでいい感じになる。
         linenoWCS = screenTopLineNo + 13;
         columnWCS = 0;
     }
